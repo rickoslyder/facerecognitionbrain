@@ -10,24 +10,35 @@ import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import ParticlesBackground from './components/ParticleBackground/ParticleBackground';
 import React, { Component } from "react"
 
-const USER_ID = 'localblackguy';
-// Your PAT (Personal Access Token) can be found in the portal under Authentification
-const PAT = '2c8697350ea7401b889eea81bf05c715';
-const APP_ID = 'my-first-application';
-// Change these to whatever model and image URL you want to use
-const MODEL_ID = 'face-detection';
-// const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105';    
-
+const initialState = {
+  input: "",
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+      id: '',
+      name: '',
+      email: '',
+      entries: 0,
+      joined: ''
+  }
+}
 class App extends Component {
   constructor() {
     super()
-    this.state = {
-      input: "",
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false
-    }
+    this.state = initialState
+  }
+
+  loadUser = (data) => {
+      this.setState({ user: 
+        {id: data.id,
+        name: data.name,
+        email: data.email,
+        entries: data.entries,
+        joined: data.joined
+      }
+    })
   }
 
   calculateFaceLocation = (data) => {
@@ -35,7 +46,7 @@ class App extends Component {
     const image = document.getElementById('inputimage')
     const width = Number(image.width)
     const height = Number(image.height)
-    console.log(width, height)
+    console.log(`image dimensions: ${width}x${height}`)
 
     return {
       leftCol: face.left_col * width,
@@ -57,36 +68,37 @@ class App extends Component {
   onButtonSubmit = () => {
     console.log('click')
     this.setState( {imageUrl: this.state.input} )
-    let IMAGE_URL = this.state.input;
 
-    const raw = JSON.stringify({
-      "user_app_id": {
-          "user_id": USER_ID,
-          "app_id": APP_ID
-      },
-      "inputs": [
-          {
-              "data": {
-                  "image": {
-                      "url": IMAGE_URL
-                  }
-              }
-          }
-      ]
-  });
-  
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Key ' + PAT
-        },
-        body: raw
-    };
-
-    fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/outputs", requestOptions)
+    fetch('https://ztm-api-smartbrain.herokuapp.com/facedetect', {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+          input: this.state.input,
+      })
+  })
     .then(response => response.json())
-    .then(response => this.displayFaceBox(this.calculateFaceLocation(response)))
+    .then(response => {
+      if (response) {
+        fetch('https://ztm-api-smartbrain.herokuapp.com/image', {
+          method: 'put',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+              id: this.state.user.id,
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log("/image response data -", data)
+          if (data) {
+            console.log('changing user entries state to', data)  
+            this.setState({ user: {
+                ...this.state.user,
+                entries: data}})
+              this.onRouteChange('home')
+          }
+      }).catch(console.log)
+      }
+      this.displayFaceBox(this.calculateFaceLocation(response))})
     .catch(error => console.log('error', error));
   }
 
@@ -102,24 +114,24 @@ class App extends Component {
       this.setState({isSignedIn: true})
     }
     if (route === "signout") {
-      this.setState({isSignedIn: false})
+      this.setState(initialState)
     }
   }
 
   renderRoute = () => {
-    const { route, imageUrl, box } = this.state;  
-    console.log("rendering")
+    const { route, imageUrl, box } = this.state;
+    console.log("rendering", route)
     switch (route) {
       case "signin":
-        return <SignIn onRouteChange={this.onRouteChange}/>
+        return <SignIn onRouteChange={this.onRouteChange} loadUser={this.loadUser}/>
       case "signout":
-        return <SignIn onRouteChange={this.onRouteChange}/>
+        return <SignIn onRouteChange={this.onRouteChange} loadUser={this.loadUser}/>
       case "register":
-        return <Register onRouteChange={this.onRouteChange}/>
+        return <Register onRouteChange={this.onRouteChange} loadUser={this.loadUser}/>
       case "home":
         return (<div>
           <Logo />
-          <Rank />
+          <Rank name={this.state.user.name} entries={this.state.user.entries}/>
           <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
           <FaceRecognition box={box} imageUrl={imageUrl} />
         </div>)
