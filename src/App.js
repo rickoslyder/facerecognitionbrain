@@ -10,6 +10,8 @@ import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import ParticlesBackground from './components/ParticleBackground/ParticleBackground';
 import React, { Component } from "react"
 
+const API_BASE_URL = process.env.API_BASE_URL
+
 const initialState = {
   input: "",
   imageUrl: '',
@@ -69,7 +71,7 @@ class App extends Component {
     console.log('click')
     this.setState( {imageUrl: this.state.input} )
 
-    fetch('https://ztm-api-smartbrain.herokuapp.com/facedetect', {
+    fetch(`${API_BASE_URL}/facedetect`, {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -79,7 +81,7 @@ class App extends Component {
     .then(response => response.json())
     .then(response => {
       if (response) {
-        fetch('https://ztm-api-smartbrain.herokuapp.com/image', {
+        fetch(`${API_BASE_URL}/image`, {
           method: 'put',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({

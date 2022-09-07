@@ -2,6 +2,8 @@
 import React, { Component } from "react";
 import 'tachyons';
 
+const API_BASE_URL = process.env.API_BASE_URL
+
 class SignIn extends Component{
     constructor(props) {
         super(props)
@@ -24,7 +26,7 @@ class SignIn extends Component{
             return alert("Please enter an email and a password to log in")
         }
 
-        fetch('https://ztm-api-smartbrain.herokuapp.com/signin', {
+        fetch(`${API_BASE_URL}/signin`, {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

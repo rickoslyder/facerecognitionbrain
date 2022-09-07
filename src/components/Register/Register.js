@@ -2,6 +2,8 @@
 import React, { Component } from "react";
 import 'tachyons';
 
+const API_BASE_URL = process.env.API_BASE_URL
+
 class Register extends Component {
     constructor(props) {
         super(props)
@@ -32,7 +34,7 @@ class Register extends Component {
         if (registerPassword.length < 8) {
             return alert("Passwords must be 8 or more characters")
         }
-        fetch('https://ztm-api-smartbrain.herokuapp.com/register', {
+        fetch(`${API_BASE_URL}/register`, {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
