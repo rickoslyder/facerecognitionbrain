@@ -15,7 +15,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 const initialState = {
   input: "",
   imageUrl: '',
-  box: {},
+  boxes: [],
   route: 'signin',
   isSignedIn: false,
   user: {
@@ -43,23 +43,48 @@ class App extends Component {
     })
   }
 
-  calculateFaceLocation = (data) => {
-    const face = data.outputs[0].data.regions[0].region_info.bounding_box;
+  // calculateFaceLocation = (data) => {
+  //   console.log(data)
+  //   const face = data.outputs[0].data.regions[0].region_info.bounding_box;
+  //   const image = document.getElementById('inputimage')
+  //   const width = Number(image.width)
+  //   const height = Number(image.height)
+  //   console.log(`image dimensions: ${width}x${height}`)
+
+  //   return {
+  //     leftCol: face.left_col * width,
+  //     topRow: face.top_row * height,
+  //     rightCol: width - (face.right_col * width),
+  //     bottomRow: height - (face.bottom_row * height)
+  //   }
+  // }
+
+  calculateFaceLocations = (data) => {
+    const detectedFaces = data.outputs[0].data.regions
+    let faceCoordinates = [];
+    faceCoordinates = detectedFaces.map(detectedFace => {
+      return detectedFace.region_info.bounding_box
+    })
+    
     const image = document.getElementById('inputimage')
     const width = Number(image.width)
     const height = Number(image.height)
     console.log(`image dimensions: ${width}x${height}`)
 
-    return {
-      leftCol: face.left_col * width,
-      topRow: face.top_row * height,
-      rightCol: width - (face.right_col * width),
-      bottomRow: height - (face.bottom_row * height)
-    }
-  }
+    let faceBoxes = faceCoordinates.map(face => {
+      return {
+        leftCol: face.left_col * width,
+        topRow: face.top_row * height,
+        rightCol: width - (face.right_col * width),
+        bottomRow: height - (face.bottom_row * height)
+      }
+    })
 
-  displayFaceBox = (box) => {
-    this.setState({box: box})
+    return faceBoxes
+  }  
+
+  displayFaceBoxes = (boxes) => {
+    this.setState({boxes: boxes})
   }
   
   onInputChange = (event) => {
@@ -100,7 +125,7 @@ class App extends Component {
           }
       }).catch(console.log)
       }
-      this.displayFaceBox(this.calculateFaceLocation(response))})
+      this.displayFaceBoxes(this.calculateFaceLocations(response))})
     .catch(error => console.log('error', error));
   }
 
@@ -121,7 +146,7 @@ class App extends Component {
   }
 
   renderRoute = () => {
-    const { route, imageUrl, box } = this.state;
+    const { route, imageUrl, boxes } = this.state;
     console.log("rendering", route)
     switch (route) {
       case "signin":
@@ -135,7 +160,7 @@ class App extends Component {
           <Logo />
           <Rank name={this.state.user.name} entries={this.state.user.entries}/>
           <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} />
-          <FaceRecognition box={box} imageUrl={imageUrl} />
+          <FaceRecognition boxes={boxes} imageUrl={imageUrl} />
         </div>)
       default:
         return <h1>Unconfigured route - please sign out and sign back in again</h1>
