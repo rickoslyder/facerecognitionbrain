@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from "react";
 import 'tachyons';
+import makeApiCall from "../../utils/makeApiCall";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
@@ -34,19 +35,16 @@ class Register extends Component {
         if (registerPassword.length < 8) {
             return alert("Passwords must be 8 or more characters")
         }
-        fetch(`${API_BASE_URL}/register`, {
-            method: 'post',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                name: this.state.registerName,
-                email: this.state.registerEmail,
-                password: this.state.registerPassword
-            })
-        })
+        makeApiCall('post','register', body={
+                    name: this.state.registerName,
+                    email: this.state.registerEmail,
+                    password: this.state.registerPassword
+                })
         .then(response => response.json())
         .then(user => {
             console.log("Registration response data -", user)
-            if (user.id) {
+            if (user.userId) {
+                window.sessionStorage.setItem('token', user.token)
                 this.props.loadUser(user)
                 this.props.onRouteChange('home')
             } else {

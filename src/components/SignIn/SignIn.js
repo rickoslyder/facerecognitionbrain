@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 import React, { Component } from "react";
+import './SignIn.css';
 import 'tachyons';
+import makeApiCall from "../../utils/makeApiCall";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
@@ -19,6 +21,11 @@ class SignIn extends Component{
     onPasswordChange = (event) => {
         this.setState({signInPassword: event.target.value})
     }
+
+    saveAuthTokenInSession = (token) => {
+        window.sessionStorage.setItem('token', token)
+    }
+
     onSubmitSignIn = () => {
         let { signInEmail, signInPassword } = this.state
 
@@ -26,21 +33,24 @@ class SignIn extends Component{
             return alert("Please enter an email and a password to log in")
         }
 
-        fetch(`${API_BASE_URL}/signin`, {
-            method: 'post',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                email: this.state.signInEmail,
-                password: this.state.signInPassword
-            })
-        })
+        makeApiCall('post','signin','',{email: signInEmail, password: signInPassword})
         .then(response => response.json())
         .then(data => {
             console.log("signin response data -", data)
-            if (data.id) {
-                this.props.loadUser(data)
-                this.props.onRouteChange('home')
-            } else {
+            if (data.userId && data.success === 'true') {
+                this.saveAuthTokenInSession(data.token)
+                makeApiCall('get',`profile/${data.userId}`,data.token)
+                .then(resp => resp.json())
+                .then(user => { 
+                if (user && user.email) {
+                    console.log(`user`, user)
+                    this.props.loadUser(user),
+                    this.props.onRouteChange('home')
+                }
+                })
+            }
+            else {
+                console.log(data)
                 return alert(data)
             }
         })
