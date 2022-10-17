@@ -89,12 +89,12 @@ class FileInput extends Component {
     render() {
         return (
             <div class="fileupload">
-                <h2>Update Picture</h2>
+                <h3>Update Picture</h3>
                 <form id="form" enctype="multipart/form-data">
                     <div class="input-group">
-                        <label for="file">Select file</label>
                         <input id="file" ref={this.fileInput} type="file" />
                     </div>
+                    <br />
                     <button class="submit-btn" onClick={this.uploadImage}>Upload</button>
                 </form>
             </div>
