@@ -35,7 +35,7 @@ class Register extends Component {
         if (registerPassword.length < 8) {
             return alert("Passwords must be 8 or more characters")
         }
-        makeApiCall('post','register', body={
+        makeApiCall('post','register', '', {
                     name: this.state.registerName,
                     email: this.state.registerEmail,
                     password: this.state.registerPassword

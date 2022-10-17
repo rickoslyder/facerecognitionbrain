@@ -12,7 +12,9 @@ import React, { Component } from "react"
 import Modal from './components/Modal/Modal';
 import Profile from './components/Profile/Profile';
 import makeApiCall from './utils/makeApiCall';
+import makeExtCall from './utils/makeExtCall';
 
+// eslint-disable-next-line no-unused-vars
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 const initialState = {
@@ -30,7 +32,8 @@ const initialState = {
       joined: '',
       age: 0,
       pet: ''
-  }
+    },
+  profileImage: ''
 }
 class App extends Component {
   constructor() {
@@ -63,12 +66,20 @@ class App extends Component {
     }
   }
 
+//   componentDidUpdate(prevProps, prevState) {
+//     if (prevProps.entries === this.props.entries && prevProps.name === this.props.name) {
+//         return null
+//     }
+//     this.loadProfileImage(this.props.entries);
+// }
+
   loadUser = (signInData) => {
     if (signInData.token) {
       makeApiCall('get',`profile/${signInData.userId}`, signInData.token)
       .then(res => res.json())
       .then(data => {
-      this.setState({ user: 
+      this.setState({ 
+        user: 
         {
           id: data.id,
           name: data.name,
@@ -80,6 +91,7 @@ class App extends Component {
         }
       })
     })
+    this.loadProfileImage()
     return
   }
     const token = window.sessionStorage.getItem('token')
@@ -99,8 +111,41 @@ class App extends Component {
         }
       })
     })
+    this.loadProfileImage()
   }
 }
+
+  loadProfileImage = () => {
+    const { user } = this.state
+    const defaultImageEndpoint = 'https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg'
+    const userImageEndpoint = `https://smartbrain-profilepicsdev.s3.amazonaws.com/profile-pic-${user.id}.png`
+    
+    if (user !== initialState.user) {
+      makeExtCall('get', userImageEndpoint)
+      .then(res => {
+        if (!res.ok) {
+          console.log(`Error retrieving profile image for user ${user.id}`)
+          return 'failed'
+        } else {
+          console.log(`Successfully retrieved profile image for user ${user.id}`)
+          return 'success'
+        }
+      })
+      .then(data => {
+        return data === 'success' ? this.setState({profileImage: userImageEndpoint}) : this.setState({profileImage: defaultImageEndpoint})
+      })
+      .catch(console.log)
+
+      console.log('image loaded')
+    } else {
+      setTimeout(() => {
+        this.loadProfileImage()
+      }, 1000)
+      
+    }
+
+
+  }
 
   calculateFaceLocations = (data) => {
     if (data && data.outputs) {
@@ -180,6 +225,7 @@ class App extends Component {
     console.log(`Changing route from ${currentState} to ${route}`)
     if (route === "home") {
       this.setState({isSignedIn: true})
+      this.loadProfileImage()
     }
     if (route === "signout") {
       this.setState(initialState)
@@ -224,18 +270,20 @@ class App extends Component {
   }
 
   render() {
-    const { isSignedIn, isProfileOpen, user} = this.state;  
+    const { isSignedIn, isProfileOpen, user, profileImage} = this.state;  
     return (
       <div className="App">
         <ParticlesBackground />
-        <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn} toggleModal={this.toggleModal}/>
+        <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn} toggleModal={this.toggleModal} profileImage={profileImage}/>
         {isProfileOpen && 
           <Modal>
             <Profile 
               isProfileOpen={isProfileOpen}
               onRouteChange={this.onRouteChange} 
               toggleModal={this.toggleModal}
-              loadUser={this.loadUser} 
+              loadUser={this.loadUser}
+              profileImage={profileImage}
+              updateImage={this.loadProfileImage} 
               activeUser={user} />
           </Modal>}
         {this.renderRoute()}

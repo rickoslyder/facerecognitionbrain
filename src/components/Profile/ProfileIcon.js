@@ -28,7 +28,7 @@ class ProfileIcon extends Component {
         <Dropdown isOpen={this.state.dropdownOpen} toggle={this.toggle} direction={this.direction}>
             <DropdownToggle>
                 <img
-                    src="https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg"
+                    src={this.props.profileImage}
                     className="br-100 ba h3 w3 dib" alt="avatar" />
             </DropdownToggle>
             <DropdownMenu>

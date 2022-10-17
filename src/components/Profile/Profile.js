@@ -3,6 +3,8 @@ import { DateTime } from "luxon";
 import './Profile.css'
 import makeApiCall from '../../utils/makeApiCall';
 
+import FileInput from '../FileInput/FileInput';
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 class Profile extends React.Component {
@@ -54,7 +56,7 @@ class Profile extends React.Component {
     }
 
     render() {
-        const { isProfileOpen, toggleModal, activeUser } = this.props
+        const { isProfileOpen, toggleModal, activeUser, updateImage, profileImage } = this.props
         const { id, name, entries, age, pet, joined } = activeUser
         const joinDate = DateTime.fromISO(joined)
         return (
@@ -62,7 +64,7 @@ class Profile extends React.Component {
                 <main className="br3 ba dark-gray b--black-10 mv4 w-100 w-50-m w-25-l mw6 shadow-5 center bg-white">
                 <article className="pa4 black-80 w-80">
                     <img
-                        src="https://st3.depositphotos.com/6672868/13701/v/600/depositphotos_137014128-stock-illustration-user-profile-icon.jpg"
+                        src={profileImage}
                         className="br-100 ba h3 w3 dib" alt="avatar" />
                     <h1>{name}</h1>
                     <h4>Images Submitted: {entries}</h4>
@@ -84,6 +86,8 @@ class Profile extends React.Component {
                         onChange={this.onPetChange}
                         className="pa2 ba w-100" 
                         type="text" name="pet"  id="pet" placeholder={pet ? pet : 'e.g. Dragon'}/>
+                    <hr />
+                    <FileInput userId={id} updateImage={updateImage}/>
                     <div className='mt4' style={{ display: 'flex', justifyContent: 'space-evenly'}}>
                         <button 
                             onClick={() => this.onSubmitProfileUpdate(id)}
